@@ -5,7 +5,7 @@ import Projects from "@/components/Projects"
 
 const page = () => {
   return (
-    <div className="flex flex-col">
+    <div>
       <Hero />
       <About />
       <Skills />

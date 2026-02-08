@@ -7,7 +7,7 @@ export default function Hero() {
   return (
     <main className="">
       <section className="min-h-screen flex items-center bg-background">
-        <div className="container mx-auto px-8 grid md:grid-cols-2 gap-16 items-center">
+        <div className="container mx-auto grid md:grid-cols-2 gap-16 items-center">
 
           {/* Left Content */}
           <Card className="p-8 rounded-lg shadow-xl">
@@ -40,9 +40,9 @@ export default function Hero() {
 
           {/* Right Image */}
           <div className="relative flex justify-center">
-            <div className="absolute -inset-8 bg-primary/30 blur-[100px] rounded-full" />
+            <div className="absolute inset-0 md:-inset-8 bg-primary/30 blur-[100px] rounded-full" />
 
-             <Image src='/profile-pic.avif' alt="hridoy portfolio hridoymolla" className="w-72 h-72 md:w-80 md:h-80 z-10 rounded-lg transform rotate-3 transition-transform duration-300 hover:rotate-0" width={500} height={500} />
+             <Image src='/profile-pic.avif' alt="hridoy portfolio hridoymolla" className="w-48 h-48 md:w-80 md:h-80 z-10 rounded-lg transform rotate-3 transition-transform duration-300 hover:rotate-0" width={500} height={500} />
           </div>
 
         </div>
