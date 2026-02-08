@@ -31,9 +31,6 @@ const year: number = new Date().getFullYear()
 const navItems: NavItem[] = [
   { href: "/", icon: Laptop, label: "Home", active: true },
   { href: "/projects", icon: Code, label: "Projects" },
-  // { href: "/courses", icon: GraduationCap, label: "Courses" },
-  { href: "/project-assets", icon: Box, label: "Project Assets" },
-  // { href: "/get-certified", icon: Award, label: "Get Certified" },
   { href: "/reviews", icon: Star, label: "Reviews" },
   { href: "/blogs", icon: Newspaper, label: "Blogs" },
   { href: "/contact", icon: Contact, label: "Contact" },
