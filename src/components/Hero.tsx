@@ -6,8 +6,8 @@ import Image from "next/image"
 export default function Hero() {
   return (
     <main className="">
-      <section className="min-h-screen flex items-center bg-background">
-        <div className="container mx-auto grid md:grid-cols-2 gap-16 items-center">
+      <section className="min-h-screen flex items-center bg-background max-w-7xl mx-auto">
+        <div className="container max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center lg:px-7">
 
           {/* Left Content */}
           <Card className="p-8 rounded-lg shadow-xl">
@@ -42,7 +42,7 @@ export default function Hero() {
           <div className="relative flex justify-center">
             <div className="absolute inset-0 md:-inset-8 bg-primary/30 blur-[100px] rounded-full" />
 
-             <Image src='/profile-pic.avif' alt="hridoy portfolio hridoymolla" className="w-48 h-48 md:w-80 md:h-80 z-10 rounded-lg transform rotate-3 transition-transform duration-300 hover:rotate-0" width={500} height={500} />
+             <Image src='/profile-pic.avif' alt="hridoy portfolio hridoymolla" className="w-48 h-48 md:w-80 md:w-80 md:h-80 z-10 rounded-lg transform rotate-3 transition-transform duration-300 hover:rotate-0" width={500} height={500} />
           </div>
 
         </div>

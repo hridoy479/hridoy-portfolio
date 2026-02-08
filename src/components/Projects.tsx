@@ -28,7 +28,7 @@ export default function Projects() {
 
   useEffect(() => {
     // Initialize likes from projectsData
-    const initialLikes = projectsData.slice(0, 8).reduce((acc, project) => {
+    const initialLikes = projectsData.slice(0, 6).reduce((acc, project) => {
       acc[project.id] = project.likes;
       return acc;
     }, {} as Record<number, number>);
@@ -49,7 +49,7 @@ export default function Projects() {
     })
   }
 
-  const projectsToDisplay = projectsData.slice(0, 8)
+  const projectsToDisplay = projectsData.slice(0, 6)
 
   return (
     <section id="projects" className="container mx-auto px-8 py-16 bg-background">
