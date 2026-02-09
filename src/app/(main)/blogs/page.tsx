@@ -6,6 +6,7 @@ import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Heart } from "lucide-react";
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface Blog {
   id: string;
@@ -116,7 +117,7 @@ const BlogsPage = () => {
     return (
       <main className="flex-1 overflow-auto w-full lg:w-auto">
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-          <div className="text-center py-12">Loading blogs...</div>
+          <LoadingSpinner message="Loading blogs..." />
         </div>
       </main>
     );

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star } from "lucide-react";
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface Review {
   id: number;
@@ -51,7 +52,7 @@ export default function ReviewsPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center py-12">Loading reviews...</div>
+        <LoadingSpinner message="Loading reviews..." />
       </div>
     );
   }

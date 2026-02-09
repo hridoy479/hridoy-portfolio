@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { Heart } from "lucide-react";
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface Project {
   id: number;
@@ -113,7 +114,7 @@ const Page = () => {
     return (
       <main className="flex-1 overflow-auto w-full lg:w-auto">
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-          <div className="text-center py-12">Loading projects...</div>
+          <LoadingSpinner message="Loading projects..." />
         </div>
       </main>
     );

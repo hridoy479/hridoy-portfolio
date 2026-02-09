@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Heart, ArrowLeft, Calendar, Sparkles, ExternalLink } from 'lucide-react';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface Project {
   id: number;
@@ -101,7 +102,7 @@ export default function ProjectDetailPage() {
     return (
       <main className="flex-1 overflow-auto w-full lg:w-auto">
         <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
-          <div className="text-center py-12">Loading project...</div>
+          <LoadingSpinner message="Loading project..." />
         </div>
       </main>
     );
