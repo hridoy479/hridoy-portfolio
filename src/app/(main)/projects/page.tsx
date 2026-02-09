@@ -44,7 +44,7 @@ const Page = () => {
         setProjects(data);
         
         // Extract unique project types from projects
-        const uniqueTypes = ['All', ...new Set(data.map((project: Project) => project.type))];
+        const uniqueTypes: string[] = ['All', ...Array.from(new Set<string>(data.map((project: Project) => project.type)))];
         setFilters(uniqueTypes);
         
         // Check which projects are liked by this user using batch endpoint

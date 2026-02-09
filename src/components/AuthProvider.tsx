@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
@@ -14,6 +15,16 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
+// Helper to convert Supabase User to our User type
+function toUser(supabaseUser: SupabaseUser | null | undefined): User | null {
+  if (!supabaseUser || !supabaseUser.email) return null;
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email,
+    user_metadata: supabaseUser.user_metadata,
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      setUser(toUser(session?.user));
       setLoading(false);
     });
 
@@ -29,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      setUser(toUser(session?.user));
       setLoading(false);
     });
 

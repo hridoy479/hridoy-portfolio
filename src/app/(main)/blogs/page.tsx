@@ -47,7 +47,7 @@ const BlogsPage = () => {
         setBlogs(data);
         
         // Extract unique categories from blogs
-        const uniqueCategories = ['All', ...new Set(data.map((blog: Blog) => blog.category))];
+        const uniqueCategories: string[] = ['All', ...Array.from(new Set<string>(data.map((blog: Blog) => blog.category)))];
         setCategories(uniqueCategories);
         
         // Check which blogs are liked by this user using batch endpoint

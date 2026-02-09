@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
@@ -6,6 +7,16 @@ export interface User {
   user_metadata?: {
     full_name?: string;
     avatar_url?: string;
+  };
+}
+
+// Helper to convert Supabase User to our User type
+function toUser(supabaseUser: SupabaseUser | null): User | null {
+  if (!supabaseUser || !supabaseUser.email) return null;
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email,
+    user_metadata: supabaseUser.user_metadata,
   };
 }
 
@@ -46,7 +57,7 @@ export async function signOut() {
 export async function getCurrentUser(): Promise<User | null> {
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error) throw error;
-  return user;
+  return toUser(user);
 }
 
 // Get current session
@@ -59,7 +70,7 @@ export async function getSession() {
 // Listen to auth state changes
 export function onAuthStateChange(callback: (user: User | null) => void) {
   return supabase.auth.onAuthStateChange((_event, session) => {
-    callback(session?.user ?? null);
+    callback(toUser(session?.user ?? null));
   });
 }
 
