@@ -1,0 +1,15 @@
+{
+  "hero": {
+    "name": "Hridoy",
+    "title": "JavaScript Developer",
+    "description": "I design and build modern web applications with React, Next.js, and Tailwind CSS — focused on performance, clarity, and impact.",
+    "profileImage": "/profile-pic.avif",
+    "badge": "Portfolio"
+  },
+  "about": {
+    "badge": "About Me",
+    "title": "Who is Hridoy?",
+    "paragraph1": "I am a passionate JavaScript Developer with expertise in building modern web applications. My journey in web development began with a fascination for creating intuitive user experiences and robust, scalable backend systems. I specialize in React, Next.js, and Tailwind CSS, always striving for performance, clarity, and impactful digital solutions.",
+    "paragraph2": "Beyond coding, I enjoy exploring new technologies, contributing to open-source projects, and continuously learning to refine my craft. Let's build something amazing together!"
+  }
+}

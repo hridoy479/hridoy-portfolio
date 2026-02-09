@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,13 +8,64 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Mail, Phone } from "lucide-react"; // Assuming lucide-react is available for icons
+import { Mail, Phone } from "lucide-react";
 
 export default function ContactPage() {
-  const handleSubmit = (event: React.FormEvent) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // Handle form submission logic here
-    console.log("Form submitted!");
+    setSubmitting(true);
+    setSubmitStatus('idle');
+
+    try {
+      const messageData = {
+        id: `msg-${Date.now()}`,
+        ...formData,
+        date: new Date().toISOString().split('T')[0],
+        read: false,
+      };
+
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(messageData),
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setFormData({
+          name: "",
+          email: "",
+          subject: "",
+          message: "",
+        });
+        alert("Message sent successfully! We'll get back to you soon.");
+      } else {
+        setSubmitStatus('error');
+        alert("Failed to send message. Please try again.");
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSubmitStatus('error');
+      alert("An error occurred. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   return (
@@ -38,8 +90,11 @@ export default function ContactPage() {
                     type="text"
                     id="name"
                     name="name"
+                    value={formData.name}
+                    onChange={handleChange}
                     className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-primary bg-input text-foreground"
                     required
+                    disabled={submitting}
                   />
                 </div>
                 <div>
@@ -50,8 +105,11 @@ export default function ContactPage() {
                     type="email"
                     id="email"
                     name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-primary bg-input text-foreground"
                     required
+                    disabled={submitting}
                   />
                 </div>
                 <div>
@@ -62,8 +120,11 @@ export default function ContactPage() {
                     type="text"
                     id="subject"
                     name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
                     className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-primary bg-input text-foreground"
                     required
+                    disabled={submitting}
                   />
                 </div>
                 <div>
@@ -74,12 +135,15 @@ export default function ContactPage() {
                     id="message"
                     name="message"
                     rows={5}
+                    value={formData.message}
+                    onChange={handleChange}
                     className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-primary bg-input text-foreground"
                     required
+                    disabled={submitting}
                   ></textarea>
                 </div>
-                <Button type="submit" className="w-full py-2">
-                  Send Message
+                <Button type="submit" className="w-full py-2" disabled={submitting}>
+                  {submitting ? 'Sending...' : 'Send Message'}
                 </Button>
               </form>
             </CardContent>

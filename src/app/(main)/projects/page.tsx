@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from 'react';
-import projectsData from '@/lib/projectsData.json';
 import { Heart } from "lucide-react";
 
 interface Project {
@@ -14,42 +13,111 @@ interface Project {
   gradientClass: string;
   aiPowered?: boolean;
   techIcons: string[];
-  likes: number; // Add likes property
+  likes: number;
 }
 
 const Page = () => {
-  const [activeFilter, setActiveFilter] = useState('Full Stack');
+  const [activeFilter, setActiveFilter] = useState('All');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [filters, setFilters] = useState<string[]>(['All']);
   const [likedProjects, setLikedProjects] = useState<Set<number>>(new Set());
-  const [projectLikes, setProjectLikes] = useState<Record<number, number>>({});
-  const filters = ["All", "Full Stack", "React JS", "JavaScript", "HTML CSS"];
+  const [loading, setLoading] = useState(true);
+  const [userIdentifier, setUserIdentifier] = useState<string>('');
 
   useEffect(() => {
-    // Initialize likes from projectsData
-    const initialLikes = projectsData.reduce((acc, project) => {
-      acc[project.id] = project.likes;
-      return acc;
-    }, {} as Record<number, number>);
-    setProjectLikes(initialLikes);
+    // Generate or retrieve user identifier for anonymous likes
+    let identifier = localStorage.getItem('userIdentifier');
+    if (!identifier) {
+      identifier = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('userIdentifier', identifier);
+    }
+    setUserIdentifier(identifier);
+    
+    fetchProjects();
   }, []);
 
-  const handleLikeClick = (projectId: number) => {
-    setLikedProjects((prevLikedProjects) => {
-      const newLikedProjects = new Set(prevLikedProjects);
-      if (newLikedProjects.has(projectId)) {
-        newLikedProjects.delete(projectId);
-        setProjectLikes((prevLikes) => ({ ...prevLikes, [projectId]: prevLikes[projectId] - 1 }));
-      } else {
-        newLikedProjects.add(projectId);
-        setProjectLikes((prevLikes) => ({ ...prevLikes, [projectId]: prevLikes[projectId] + 1 }));
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch('/api/projects');
+      if (response.ok) {
+        const data = await response.json();
+        setProjects(data);
+        
+        // Extract unique project types from projects
+        const uniqueTypes = ['All', ...new Set(data.map((project: Project) => project.type))];
+        setFilters(uniqueTypes);
+        
+        // Check which projects are liked by this user using batch endpoint
+        const identifier = localStorage.getItem('userIdentifier');
+        if (identifier && data.length > 0) {
+          const projectIds = data.map((project: Project) => project.id);
+          const likeResponse = await fetch('/api/projects/likes/batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectIds, userIdentifier: identifier }),
+          });
+          
+          if (likeResponse.ok) {
+            const { likedIds } = await likeResponse.json();
+            setLikedProjects(new Set(likedIds));
+          }
+        }
       }
-      return newLikedProjects;
-    });
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const filteredProjects = projectsData.filter((project: Project) => {
+  const handleLikeClick = async (projectId: number) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIdentifier }),
+      });
+
+      if (response.ok) {
+        const { liked } = await response.json();
+        setLikedProjects((prev) => {
+          const newSet = new Set(prev);
+          if (liked) {
+            newSet.add(projectId);
+          } else {
+            newSet.delete(projectId);
+          }
+          return newSet;
+        });
+
+        // Update local likes count
+        setProjects((prevProjects) =>
+          prevProjects.map((project) =>
+            project.id === projectId
+              ? { ...project, likes: project.likes + (liked ? 1 : -1) }
+              : project
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+  };
+
+  const filteredProjects = projects.filter((project: Project) => {
     if (activeFilter === 'All') return true;
     return project.type.toLowerCase().includes(activeFilter.toLowerCase());
   });
+
+  if (loading) {
+    return (
+      <main className="flex-1 overflow-auto w-full lg:w-auto">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+          <div className="text-center py-12">Loading projects...</div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 overflow-auto w-full lg:w-auto">
@@ -93,6 +161,7 @@ const Page = () => {
           {filteredProjects.map((project: Project) => (
             <div
               key={project.id}
+              onClick={() => window.location.href = `/projects/${project.id}`}
               className={`project-card ${project.gradientClass} rounded-xl lg:rounded-2xl p-4 sm:p-6 cursor-pointer hover:scale-[1.02] transition relative`}
             >
               {project.year && (
@@ -143,7 +212,7 @@ const Page = () => {
 
               {/* Like Button with Counter */}
               <div className="absolute top-4 right-4 flex items-center gap-2">
-                <span className="text-sm font-medium text-red-500">{projectLikes[project.id]}</span>
+                <span className="text-sm font-medium text-red-500">{project.likes}</span>
                 <button
                   className="p-2 rounded-full bg-background/50 hover:bg-background/80 transition-colors"
                   onClick={(e) => {

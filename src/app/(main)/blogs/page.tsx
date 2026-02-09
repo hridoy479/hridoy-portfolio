@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import blogData from '@/lib/blogData.json';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,42 +16,111 @@ interface Blog {
   image: string;
   excerpt: string;
   content: string;
-  likes: number; // Add likes property
+  likes: number;
 }
 
 const BlogsPage = () => {
   const [activeCategory, setActiveCategory] = useState('All');
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [categories, setCategories] = useState<string[]>(['All']);
   const [likedBlogs, setLikedBlogs] = useState<Set<string>>(new Set());
-  const [blogLikes, setBlogLikes] = useState<Record<string, number>>({});
-  const categories = ["All", "Web Development", "CSS", "React", "Programming"];
+  const [loading, setLoading] = useState(true);
+  const [userIdentifier, setUserIdentifier] = useState<string>('');
 
   useEffect(() => {
-    // Initialize likes from blogData
-    const initialLikes = blogData.reduce((acc, blog) => {
-      acc[blog.id] = blog.likes;
-      return acc;
-    }, {} as Record<string, number>);
-    setBlogLikes(initialLikes);
+    // Generate or retrieve user identifier for anonymous likes
+    let identifier = localStorage.getItem('userIdentifier');
+    if (!identifier) {
+      identifier = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('userIdentifier', identifier);
+    }
+    setUserIdentifier(identifier);
+    
+    fetchBlogs();
   }, []);
 
-  const handleLikeClick = (blogId: string) => {
-    setLikedBlogs((prevLikedBlogs) => {
-      const newLikedBlogs = new Set(prevLikedBlogs);
-      if (newLikedBlogs.has(blogId)) {
-        newLikedBlogs.delete(blogId);
-        setBlogLikes((prevLikes) => ({ ...prevLikes, [blogId]: prevLikes[blogId] - 1 }));
-      } else {
-        newLikedBlogs.add(blogId);
-        setBlogLikes((prevLikes) => ({ ...prevLikes, [blogId]: prevLikes[blogId] + 1 }));
+  const fetchBlogs = async () => {
+    try {
+      const response = await fetch('/api/blogs');
+      if (response.ok) {
+        const data = await response.json();
+        setBlogs(data);
+        
+        // Extract unique categories from blogs
+        const uniqueCategories = ['All', ...new Set(data.map((blog: Blog) => blog.category))];
+        setCategories(uniqueCategories);
+        
+        // Check which blogs are liked by this user using batch endpoint
+        const identifier = localStorage.getItem('userIdentifier');
+        if (identifier && data.length > 0) {
+          const blogIds = data.map((blog: Blog) => blog.id);
+          const likeResponse = await fetch('/api/blogs/likes/batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ blogIds, userIdentifier: identifier }),
+          });
+          
+          if (likeResponse.ok) {
+            const { likedIds } = await likeResponse.json();
+            setLikedBlogs(new Set(likedIds));
+          }
+        }
       }
-      return newLikedBlogs;
-    });
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const filteredBlogs = blogData.filter((blog: Blog) => {
+  const handleLikeClick = async (blogId: string) => {
+    try {
+      const response = await fetch(`/api/blogs/${blogId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIdentifier }),
+      });
+
+      if (response.ok) {
+        const { liked } = await response.json();
+        setLikedBlogs((prev) => {
+          const newSet = new Set(prev);
+          if (liked) {
+            newSet.add(blogId);
+          } else {
+            newSet.delete(blogId);
+          }
+          return newSet;
+        });
+
+        // Update local likes count
+        setBlogs((prevBlogs) =>
+          prevBlogs.map((blog) =>
+            blog.id === blogId
+              ? { ...blog, likes: blog.likes + (liked ? 1 : -1) }
+              : blog
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+  };
+
+  const filteredBlogs = blogs.filter((blog: Blog) => {
     if (activeCategory === 'All') return true;
     return blog.category === activeCategory;
   });
+
+  if (loading) {
+    return (
+      <main className="flex-1 overflow-auto w-full lg:w-auto">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+          <div className="text-center py-12">Loading blogs...</div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 overflow-auto w-full lg:w-auto">
@@ -117,7 +185,7 @@ const BlogsPage = () => {
                 </Link>
                 {/* Like Button with Counter */}
                 <div className="absolute top-4 right-4 flex items-center gap-2">
-                  <span className="text-sm font-medium text-red-500">{blogLikes[blog.id]}</span>
+                  <span className="text-sm font-medium text-red-500">{blog.likes}</span>
                   <button
                     className="p-2 rounded-full bg-background/50 hover:bg-background/80 transition-colors"
                     onClick={(e) => {
