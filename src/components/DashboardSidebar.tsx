@@ -15,7 +15,8 @@ import {
   Home,
   Menu,
   X,
-  Star
+  Star,
+  Zap
 } from "lucide-react";
 
 export default function DashboardSidebar() {
@@ -27,6 +28,7 @@ export default function DashboardSidebar() {
     { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
     { href: "/dashboard/blogs", icon: Newspaper, label: "Blogs" },
     { href: "/dashboard/projects", icon: FolderDot, label: "Projects" },
+    { href: "/dashboard/skills", icon: Zap, label: "Skills" },
     { href: "/dashboard/messages", icon: Mail, label: "Messages" },
     { href: "/dashboard/reviews", icon: Star, label: "Reviews" },
     { href: "/dashboard/settings", icon: Settings, label: "Settings" },

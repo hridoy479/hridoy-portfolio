@@ -93,6 +93,19 @@ CREATE TABLE IF NOT EXISTS admin_users (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Skills Table
+CREATE TABLE IF NOT EXISTS skills (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  icon TEXT,
+  proficiency INTEGER DEFAULT 5 CHECK (proficiency >= 1 AND proficiency <= 5),
+  display_order INTEGER DEFAULT 0,
+  is_visible BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- ============================================
 -- 2. CREATE INDEXES
 -- ============================================
@@ -107,6 +120,9 @@ CREATE INDEX IF NOT EXISTS idx_reviews_date ON reviews(date DESC);
 CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating DESC);
 CREATE INDEX IF NOT EXISTS idx_user_likes_identifier ON user_likes(user_identifier);
 CREATE INDEX IF NOT EXISTS idx_user_likes_content ON user_likes(content_type, content_id);
+CREATE INDEX IF NOT EXISTS idx_skills_category ON skills(category);
+CREATE INDEX IF NOT EXISTS idx_skills_visible ON skills(is_visible);
+CREATE INDEX IF NOT EXISTS idx_skills_order ON skills(display_order);
 
 -- ============================================
 -- 3. CREATE FUNCTIONS
@@ -183,6 +199,9 @@ CREATE TRIGGER update_messages_updated_at BEFORE UPDATE ON messages
 CREATE TRIGGER update_reviews_updated_at BEFORE UPDATE ON reviews
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_skills_updated_at BEFORE UPDATE ON skills
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 CREATE TRIGGER update_site_settings_updated_at BEFORE UPDATE ON site_settings
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -197,6 +216,7 @@ ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE skills ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- 6. CREATE RLS POLICIES
@@ -237,6 +257,12 @@ CREATE POLICY "Anyone can delete their likes" ON user_likes FOR DELETE USING (tr
 
 -- Admin Users Policies
 CREATE POLICY "Only admins can view admin users" ON admin_users FOR SELECT USING (auth.uid() = user_id);
+
+-- Skills Policies
+CREATE POLICY "Anyone can view visible skills" ON skills FOR SELECT USING (is_visible = true);
+CREATE POLICY "Only admins can insert skills" ON skills FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY "Only admins can update skills" ON skills FOR UPDATE USING (is_admin());
+CREATE POLICY "Only admins can delete skills" ON skills FOR DELETE USING (is_admin());
 
 -- ============================================
 -- 7. STORAGE BUCKETS

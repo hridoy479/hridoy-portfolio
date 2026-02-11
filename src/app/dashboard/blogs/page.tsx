@@ -22,8 +22,16 @@ import {
   Heart,
   Calendar,
   Tag,
-  Search
+  Search,
+  Eye,
+  Code,
+  Info
 } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import rehypeRaw from 'rehype-raw';
+import 'highlight.js/styles/github-dark.css';
 
 interface BlogPost {
   id: string;
@@ -43,6 +51,7 @@ export default function BlogManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
+  const [activeTab, setActiveTab] = useState<'edit' | 'preview' | 'guide'>('edit');
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -292,68 +301,236 @@ export default function BlogManagementPage() {
       </div>
 
       {/* Edit/Add Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) setActiveTab('edit');
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>
               {editingBlog ? "Edit Blog Post" : "Create New Blog Post"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <ImageUpload
-              currentImage={formData.image}
-              onImageChange={(url) => setFormData({ ...formData, image: url })}
-              bucket="blog-images"
-              label="Blog Image"
-            />
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Enter blog title"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
-              <Input
-                id="slug"
-                value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                placeholder="blog-post-slug"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                placeholder="e.g., Web Development"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="excerpt">Excerpt</Label>
-              <Textarea
-                id="excerpt"
-                value={formData.excerpt}
-                onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                placeholder="Brief description of the blog post"
-                rows={3}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="content">Content (Markdown)</Label>
-              <Textarea
-                id="content"
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                placeholder="Write your blog content in markdown..."
-                rows={10}
-              />
-            </div>
+          
+          {/* Tabs */}
+          <div className="flex gap-2 border-b border-border pb-2">
+            <Button
+              variant={activeTab === 'edit' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveTab('edit')}
+              className="gap-2"
+            >
+              <Code className="h-4 w-4" />
+              Edit
+            </Button>
+            <Button
+              variant={activeTab === 'preview' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveTab('preview')}
+              className="gap-2"
+            >
+              <Eye className="h-4 w-4" />
+              Preview
+            </Button>
+            <Button
+              variant={activeTab === 'guide' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveTab('guide')}
+              className="gap-2"
+            >
+              <Info className="h-4 w-4" />
+              Markdown Guide
+            </Button>
           </div>
+
+          <div className="flex-1 overflow-y-auto py-4">
+            {activeTab === 'edit' && (
+              <div className="space-y-4">
+                <ImageUpload
+                  currentImage={formData.image}
+                  onImageChange={(url) => setFormData({ ...formData, image: url })}
+                  bucket="blog-images"
+                  label="Blog Image"
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Enter blog title"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="slug">Slug</Label>
+                    <Input
+                      id="slug"
+                      value={formData.slug}
+                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                      placeholder="blog-post-slug"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Input
+                    id="category"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="e.g., Web Development, React, TypeScript"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="excerpt">Excerpt</Label>
+                  <Textarea
+                    id="excerpt"
+                    value={formData.excerpt}
+                    onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                    placeholder="Brief description of the blog post (shown in blog list)"
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="content">Content (Markdown)</Label>
+                  <Textarea
+                    id="content"
+                    value={formData.content}
+                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                    placeholder="Write your blog content in markdown... Use the Preview tab to see how it looks!"
+                    rows={15}
+                    className="font-mono text-sm resize-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'preview' && (
+              <div className="space-y-4">
+                <div className="border border-border rounded-lg p-6 bg-background">
+                  <h1 className="text-3xl font-bold mb-2">{formData.title || 'Your Title Here'}</h1>
+                  <p className="text-muted-foreground mb-4">{formData.excerpt || 'Your excerpt here...'}</p>
+                  <div className="border-t border-border my-4"></div>
+                  <div className="prose prose-lg dark:prose-invert max-w-none
+                    prose-headings:font-bold prose-headings:text-foreground
+                    prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+                    prose-p:text-foreground prose-p:leading-relaxed
+                    prose-a:text-primary hover:prose-a:underline
+                    prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+                    prose-pre:bg-[#0d1117] prose-pre:border prose-pre:border-border prose-pre:rounded-lg prose-pre:p-4
+                    prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic
+                    prose-ul:list-disc prose-ul:pl-6
+                    prose-ol:list-decimal prose-ol:pl-6
+                    prose-li:text-foreground
+                  ">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeHighlight, rehypeRaw]}
+                    >
+                      {formData.content || '*Start writing to see preview...*'}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'guide' && (
+              <div className="space-y-4 text-sm">
+                <Card>
+                  <CardContent className="p-4 space-y-3">
+                    <h3 className="font-bold text-lg">Markdown Quick Reference</h3>
+                    
+                    <div className="space-y-2">
+                      <div>
+                        <p className="font-semibold">Headers:</p>
+                        <code className="block bg-muted p-2 rounded mt-1">
+                          # H1 Header<br/>
+                          ## H2 Header<br/>
+                          ### H3 Header
+                        </code>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold">Text Formatting:</p>
+                        <code className="block bg-muted p-2 rounded mt-1">
+                          **bold text**<br/>
+                          *italic text*<br/>
+                          ~~strikethrough~~
+                        </code>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold">Links:</p>
+                        <code className="block bg-muted p-2 rounded mt-1">
+                          [Link Text](https://example.com)
+                        </code>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold">Images:</p>
+                        <code className="block bg-muted p-2 rounded mt-1">
+                          ![Alt Text](image-url.jpg)
+                        </code>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold">Lists:</p>
+                        <code className="block bg-muted p-2 rounded mt-1">
+                          - Unordered item<br/>
+                          - Another item<br/>
+                          <br/>
+                          1. Ordered item<br/>
+                          2. Another item
+                        </code>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold">Code Blocks:</p>
+                        <code className="block bg-muted p-2 rounded mt-1">
+                          ```javascript<br/>
+                          const hello = "world";<br/>
+                          console.log(hello);<br/>
+                          ```
+                        </code>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold">Inline Code:</p>
+                        <code className="block bg-muted p-2 rounded mt-1">
+                          Use `code` for inline code
+                        </code>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold">Blockquotes:</p>
+                        <code className="block bg-muted p-2 rounded mt-1">
+                          &gt; This is a quote
+                        </code>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold">Tables:</p>
+                        <code className="block bg-muted p-2 rounded mt-1">
+                          | Header 1 | Header 2 |<br/>
+                          |----------|----------|<br/>
+                          | Cell 1   | Cell 2   |
+                        </code>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold">Horizontal Rule:</p>
+                        <code className="block bg-muted p-2 rounded mt-1">
+                          ---
+                        </code>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel

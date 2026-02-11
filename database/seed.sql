@@ -269,3 +269,36 @@ INSERT INTO reviews (reviewer_name, rating, comment, date) VALUES
 SELECT COUNT(*) as blog_count FROM blogs;
 SELECT COUNT(*) as project_count FROM projects;
 SELECT COUNT(*) as review_count FROM reviews;
+
+
+-- ============================================
+-- DEMO SKILLS
+-- ============================================
+
+INSERT INTO skills (name, category, icon, proficiency, display_order) VALUES
+-- Frontend
+('JavaScript', 'Frontend', '🟨', 5, 1),
+('TypeScript', 'Frontend', '🔷', 5, 2),
+('React', 'Frontend', '⚛️', 5, 3),
+('Next.js', 'Frontend', '▲', 5, 4),
+('Tailwind CSS', 'Frontend', '🎨', 5, 5),
+('Shadcn UI', 'Frontend', '🎭', 4, 6),
+
+-- Backend
+('Node.js', 'Backend', '🟢', 5, 7),
+('Express.js', 'Backend', '🚂', 4, 8),
+('REST APIs', 'Backend', '🔌', 5, 9),
+('GraphQL', 'Backend', '◈', 4, 10),
+
+-- Database
+('MongoDB', 'Database', '🍃', 4, 11),
+('PostgreSQL', 'Database', '🐘', 4, 12),
+('Supabase', 'Database', '⚡', 5, 13),
+
+-- DevOps & Tools
+('Git', 'DevOps', '📦', 5, 14),
+('Docker', 'DevOps', '🐳', 4, 15),
+('AWS', 'DevOps', '☁️', 3, 16),
+('Vercel', 'DevOps', '▲', 5, 17);
+
+SELECT COUNT(*) as skill_count FROM skills;
