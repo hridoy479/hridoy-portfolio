@@ -72,6 +72,30 @@ const Page = () => {
   };
 
   const handleLikeClick = async (projectId: number) => {
+    // Optimistic update - update UI immediately
+    const isCurrentlyLiked = likedProjects.has(projectId);
+    const newLikedState = !isCurrentlyLiked;
+    
+    // Update UI instantly
+    setLikedProjects((prev) => {
+      const newSet = new Set(prev);
+      if (newLikedState) {
+        newSet.add(projectId);
+      } else {
+        newSet.delete(projectId);
+      }
+      return newSet;
+    });
+
+    setProjects((prevProjects) =>
+      prevProjects.map((project) =>
+        project.id === projectId
+          ? { ...project, likes: project.likes + (newLikedState ? 1 : -1) }
+          : project
+      )
+    );
+
+    // Then make API call
     try {
       const response = await fetch(`/api/projects/${projectId}/like`, {
         method: 'POST',
@@ -79,11 +103,11 @@ const Page = () => {
         body: JSON.stringify({ userIdentifier }),
       });
 
-      if (response.ok) {
-        const { liked } = await response.json();
+      if (!response.ok) {
+        // Revert on error
         setLikedProjects((prev) => {
           const newSet = new Set(prev);
-          if (liked) {
+          if (isCurrentlyLiked) {
             newSet.add(projectId);
           } else {
             newSet.delete(projectId);
@@ -91,17 +115,34 @@ const Page = () => {
           return newSet;
         });
 
-        // Update local likes count
         setProjects((prevProjects) =>
           prevProjects.map((project) =>
             project.id === projectId
-              ? { ...project, likes: project.likes + (liked ? 1 : -1) }
+              ? { ...project, likes: project.likes + (isCurrentlyLiked ? 1 : -1) }
               : project
           )
         );
       }
     } catch (error) {
       console.error('Error toggling like:', error);
+      // Revert on error
+      setLikedProjects((prev) => {
+        const newSet = new Set(prev);
+        if (isCurrentlyLiked) {
+          newSet.add(projectId);
+        } else {
+          newSet.delete(projectId);
+        }
+        return newSet;
+      });
+
+      setProjects((prevProjects) =>
+        prevProjects.map((project) =>
+          project.id === projectId
+            ? { ...project, likes: project.likes + (isCurrentlyLiked ? 1 : -1) }
+            : project
+        )
+      );
     }
   };
 

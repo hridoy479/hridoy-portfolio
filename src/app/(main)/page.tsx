@@ -8,7 +8,7 @@ const page = () => {
     <div>
       <Hero />
       <About />
-      
+      <Skills />
       <Projects />
     </div>
   )

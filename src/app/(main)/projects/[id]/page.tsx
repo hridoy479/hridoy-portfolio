@@ -76,6 +76,18 @@ export default function ProjectDetailPage() {
   const handleLikeClick = async () => {
     if (!project) return;
 
+    // Optimistic update - update UI immediately
+    const newLikedState = !liked;
+    const previousLikes = project.likes;
+    
+    // Update UI instantly
+    setLiked(newLikedState);
+    setProject({
+      ...project,
+      likes: project.likes + (newLikedState ? 1 : -1)
+    });
+
+    // Then make API call
     try {
       const response = await fetch(`/api/projects/${project.id}/like`, {
         method: 'POST',
@@ -83,18 +95,22 @@ export default function ProjectDetailPage() {
         body: JSON.stringify({ userIdentifier }),
       });
 
-      if (response.ok) {
-        const { liked: isLiked } = await response.json();
-        setLiked(isLiked);
-        
-        // Update local likes count
+      if (!response.ok) {
+        // Revert on error
+        setLiked(!newLikedState);
         setProject({
           ...project,
-          likes: project.likes + (isLiked ? 1 : -1)
+          likes: previousLikes
         });
       }
     } catch (error) {
       console.error('Error toggling like:', error);
+      // Revert on error
+      setLiked(!newLikedState);
+      setProject({
+        ...project,
+        likes: previousLikes
+      });
     }
   };
 

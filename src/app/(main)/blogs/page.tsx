@@ -75,6 +75,30 @@ const BlogsPage = () => {
   };
 
   const handleLikeClick = async (blogId: string) => {
+    // Optimistic update - update UI immediately
+    const isCurrentlyLiked = likedBlogs.has(blogId);
+    const newLikedState = !isCurrentlyLiked;
+    
+    // Update UI instantly
+    setLikedBlogs((prev) => {
+      const newSet = new Set(prev);
+      if (newLikedState) {
+        newSet.add(blogId);
+      } else {
+        newSet.delete(blogId);
+      }
+      return newSet;
+    });
+
+    setBlogs((prevBlogs) =>
+      prevBlogs.map((blog) =>
+        blog.id === blogId
+          ? { ...blog, likes: blog.likes + (newLikedState ? 1 : -1) }
+          : blog
+      )
+    );
+
+    // Then make API call
     try {
       const response = await fetch(`/api/blogs/${blogId}/like`, {
         method: 'POST',
@@ -82,11 +106,11 @@ const BlogsPage = () => {
         body: JSON.stringify({ userIdentifier }),
       });
 
-      if (response.ok) {
-        const { liked } = await response.json();
+      if (!response.ok) {
+        // Revert on error
         setLikedBlogs((prev) => {
           const newSet = new Set(prev);
-          if (liked) {
+          if (isCurrentlyLiked) {
             newSet.add(blogId);
           } else {
             newSet.delete(blogId);
@@ -94,17 +118,34 @@ const BlogsPage = () => {
           return newSet;
         });
 
-        // Update local likes count
         setBlogs((prevBlogs) =>
           prevBlogs.map((blog) =>
             blog.id === blogId
-              ? { ...blog, likes: blog.likes + (liked ? 1 : -1) }
+              ? { ...blog, likes: blog.likes + (isCurrentlyLiked ? 1 : -1) }
               : blog
           )
         );
       }
     } catch (error) {
       console.error('Error toggling like:', error);
+      // Revert on error
+      setLikedBlogs((prev) => {
+        const newSet = new Set(prev);
+        if (isCurrentlyLiked) {
+          newSet.add(blogId);
+        } else {
+          newSet.delete(blogId);
+        }
+        return newSet;
+      });
+
+      setBlogs((prevBlogs) =>
+        prevBlogs.map((blog) =>
+          blog.id === blogId
+            ? { ...blog, likes: blog.likes + (isCurrentlyLiked ? 1 : -1) }
+            : blog
+        )
+      );
     }
   };
 
